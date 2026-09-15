@@ -1,0 +1,27 @@
+name: Frontend CI
+on:
+  push:
+    branches: [komari-1.4.3, build/independent-release]
+  pull_request:
+    branches: [komari-1.4.3]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Build pinned frontend
+        run: SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)" npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: komari-frontend
+          path: |
+            dist
+            komari-theme.json

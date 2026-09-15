@@ -50,7 +50,7 @@ function localKomariThemePlugin(): Plugin {
 }
 
 export default defineConfig(({ mode }) => {
-  const buildTime = new Date().toISOString();
+  const buildTime = new Date(process.env.SOURCE_DATE_EPOCH ? Number(process.env.SOURCE_DATE_EPOCH) * 1000 : Date.now()).toISOString();
 
   // Supports configuring BASE_URL via environment variables, defaulting to the root path.
   const base: string = process.env.VITE_BASE_URL ? process.env.VITE_BASE_URL : '/';

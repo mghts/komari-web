@@ -70,3 +70,6 @@ coverage/
 vite.config.dev.ts
 todo.md
 .codex
+# Local dependency cache used while validating the fork.
+.build-cache/
+.local/
