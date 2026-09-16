@@ -89,6 +89,7 @@
     "nodeTable": {
       "addNode": "添加节点",
       "autoDiscovery": {
+        "forkDockerOnly": "当前版本的自动发现安装命令仅支持 Linux Docker。使用 systemd 时，请先添加节点，再复制该节点的 Linux 安装命令。",
         "disabledDescription": "开启自动发现后，无需逐台手动添加节点。只要在目标服务器上运行一条命令，Agent 就会携带密钥自动注册并上线，非常适合批量部署多台服务器。",
         "enabledDescription": "在目标服务器上运行下面的命令，Agent 将自动注册并上线，无需手动添加节点。",
         "goToSettings": "前往“设置”开启自动发现",

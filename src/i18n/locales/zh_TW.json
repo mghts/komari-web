@@ -89,6 +89,7 @@
     "nodeTable": {
       "addNode": "新增節點",
       "autoDiscovery": {
+        "forkDockerOnly": "目前版本的自動探索安裝指令僅支援 Linux Docker。使用 systemd 時，請先新增節點，再複製該節點的 Linux 安裝指令。",
         "disabledDescription": "開啟自動發現後，無需逐臺手動新增節點。只要在目標伺服器上執行一條命令，Agent 就會攜帶金鑰自動註冊並上線，非常適合批次部署多臺伺服器。",
         "enabledDescription": "在目標伺服器上執行下面的命令，Agent 將自動註冊並上線，無需手動新增節點。",
         "goToSettings": "前往「設定」開啟自動發現",

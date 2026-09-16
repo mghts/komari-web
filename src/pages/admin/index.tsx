@@ -1,8 +1,4 @@
-import {
-  quotePowerShellArg,
-  quoteShellArg,
-  quoteShellArgs,
-} from "@/utils/shellQuote";
+import { generateAgentInstallCommand, type AgentPlatform } from "@/utils/agentInstall";
 import React, { useEffect, useState } from "react";
 import {
   NodeDetailsProvider,
@@ -202,13 +198,11 @@ const AutoDiscoverySection = ({
   const adKey: string = settings?.auto_discovery_key || "";
   const enabled = Boolean(adKey);
 
-  const [selectedPlatform, setSelectedPlatform] =
-    React.useState<Platform>("linux");
   const [showOptions, setShowOptions] = React.useState(false);
   const [installOptions, setInstallOptions] =
     React.useState<AutoDiscoveryInstallOptions>({
       disableWebSsh: false,
-      disableAutoUpdate: false,
+      disableAutoUpdate: true,
       ignoreUnsafeCert: false,
       memoryIncludeCache: false,
       getIpAddrFromNic: false,
@@ -250,6 +244,8 @@ const AutoDiscoverySection = ({
     }
     if (installOptions.disableAutoUpdate) {
       args.push("--disable-auto-update");
+    } else {
+      args.push("--disable-auto-update=false");
     }
     if (installOptions.ignoreUnsafeCert) {
       args.push("--ignore-unsafe-cert");
@@ -264,13 +260,6 @@ const AutoDiscoverySection = ({
       args.push("--gpu");
     }
     const ghproxy = installOptions.ghproxy.trim();
-    if (enableGhproxy && ghproxy) {
-      const finalUrl = (
-        ghproxy.startsWith("http") ? ghproxy : `http://${ghproxy}`
-      ).replace(/\/+$/, "");
-      args.push(`--install-ghproxy`);
-      args.push(finalUrl);
-    }
     const installDir = installOptions.dir.trim();
     if (enableCustomDir && installDir) {
       args.push(`--install-dir`);
@@ -313,74 +302,9 @@ const AutoDiscoverySection = ({
       args.push(rotateVal);
     }
 
-    let scriptFile = "install.sh";
-    if (selectedPlatform === "windows") {
-      scriptFile = "install.ps1";
-    }
-    let scriptUrl = `https://raw.githubusercontent.com/komari-monitor/komari-agent/refs/heads/main/${scriptFile}`;
-    if (enableGhproxy && ghproxy) {
-      scriptUrl = scriptUrl.slice(8); // 去掉 https://
-      if (ghproxy.endsWith("/")) {
-        scriptUrl = `${ghproxy}${scriptUrl}`;
-      } else {
-        scriptUrl = `${ghproxy}/${scriptUrl}`;
-      }
-      if (!scriptUrl.startsWith("http")) {
-        scriptUrl = `http://${scriptUrl}`;
-      }
-    }
-
-    let finalCommand = "";
-    switch (selectedPlatform) {
-      case "linux":
-        finalCommand =
-          `wget -qO- ${quoteShellArg(scriptUrl)} | sudo bash -s -- ` +
-          quoteShellArgs(args);
-        break;
-      case "windows":
-        finalCommand =
-          `powershell.exe -NoProfile -ExecutionPolicy Bypass -Command ` +
-          `"iwr ${quotePowerShellArg(scriptUrl)}` +
-          ` -UseBasicParsing -OutFile 'install.ps1'; &` +
-          ` '.\\install.ps1'`;
-        args.forEach((arg) => {
-          finalCommand += ` ${quotePowerShellArg(arg)}`;
-        });
-        finalCommand += `"`;
-        break;
-      case "macos":
-        finalCommand =
-          `zsh <(curl -sL ${quoteShellArg(scriptUrl)}) ` +
-          quoteShellArgs(args);
-        break;
-      case "docker": {
-        // Docker 运行时不支持安装脚本专用参数，剔除它们及其取值
-        const installOnlyFlags = [
-          "--install-ghproxy",
-          "--install-dir",
-          "--install-service-name",
-        ];
-        const dockerArgs: string[] = [];
-        for (let i = 0; i < args.length; i++) {
-          if (installOnlyFlags.includes(args[i])) {
-            i++; // 跳过该标志的取值
-            continue;
-          }
-          dockerArgs.push(args[i]);
-        }
-        // 自动发现会在 /app/auto-discovery.json 写入注册得到的 uuid/token，
-        // 通过 bind mount 持久化该文件，容器更新重建后复用同一身份，避免重复注册。
-        // 注意：文件挂载要求宿主机上文件已存在，否则 Docker 会将其创建为目录。
-        finalCommand =
-          `touch .komari-auto-discovery.json && ` +
-          `docker run -d --name komari-agent --restart=always ` +
-          `-v .komari-auto-discovery.json:/app/auto-discovery.json ` +
-          `ghcr.io/komari-monitor/komari-agent:latest ` +
-          quoteShellArgs(dockerArgs);
-        break;
-      }
-    }
-    return finalCommand;
+    return generateAgentInstallCommand(
+      "docker", args, enableGhproxy ? ghproxy : "",
+    );
   };
 
   const copyToClipboard = async (text: string) => {
@@ -449,14 +373,11 @@ const AutoDiscoverySection = ({
         </Text>
       </Flex>
 
-      <SegmentedControl.Root
-        value={selectedPlatform}
-        onValueChange={(value) => setSelectedPlatform(value as Platform)}
-      >
-        <SegmentedControl.Item value="linux">Linux</SegmentedControl.Item>
-        <SegmentedControl.Item value="windows">Windows</SegmentedControl.Item>
-        <SegmentedControl.Item value="macos">macOS</SegmentedControl.Item>
-        <SegmentedControl.Item value="docker">Docker</SegmentedControl.Item>
+      <Text size="2" color="gray">
+        {t("admin.nodeTable.autoDiscovery.forkDockerOnly")}
+      </Text>
+      <SegmentedControl.Root value="docker">
+        <SegmentedControl.Item value="docker">Docker · Linux amd64 / arm64</SegmentedControl.Item>
       </SegmentedControl.Root>
 
       <Flex gap="2" align="center">
@@ -498,24 +419,8 @@ const AutoDiscoverySection = ({
               </label>
             </Flex>
             <Flex gap="2" align="center">
-              <Checkbox
-                checked={installOptions.disableAutoUpdate}
-                onCheckedChange={(checked) =>
-                  setInstallOptions((prev) => ({
-                    ...prev,
-                    disableAutoUpdate: Boolean(checked),
-                  }))
-                }
-              />
-              <label
-                className="text-sm font-normal cursor-pointer"
-                onClick={() =>
-                  setInstallOptions((prev) => ({
-                    ...prev,
-                    disableAutoUpdate: !prev.disableAutoUpdate,
-                  }))
-                }
-              >
+              <Checkbox checked disabled />
+              <label className="text-sm font-normal">
                 {t("admin.nodeTable.disableAutoUpdate", "禁用自动更新")}
               </label>
             </Flex>
@@ -1328,7 +1233,6 @@ const NodeTable = ({
   );
 };
 
-type Platform = "linux" | "windows" | "macos" | "docker";
 const ActionButtons = ({ node, settings }: { node: NodeDetail, settings: any }) => {
   const { t } = useTranslation();
   return (
@@ -1415,10 +1319,10 @@ type InstallOptions = {
 };
 function GenerateCommandButton({ node, settings }: { node: NodeDetail, settings: any }) {
   const [selectedPlatform, setSelectedPlatform] =
-    React.useState<Platform>("linux");
+    React.useState<AgentPlatform>("linux");
   const [installOptions, setInstallOptions] = React.useState<InstallOptions>({
     disableWebSsh: false,
-    disableAutoUpdate: false,
+    disableAutoUpdate: true,
     ignoreUnsafeCert: false,
     memoryIncludeCache: false,
     getIpAddrFromNic: false,
@@ -1455,13 +1359,15 @@ function GenerateCommandButton({ node, settings }: { node: NodeDetail, settings:
       return `http://${settings.script_domain.replace(/\/+$/, "")}`;
     }();
     const token = node.token || "";
-    let args = ["-e", host, "-t", token];
+    const args = ["-e", host, "-t", token];
     // 根据安装选项生成参数
     if (installOptions.disableWebSsh) {
       args.push("--disable-web-ssh");
     }
     if (installOptions.disableAutoUpdate) {
       args.push("--disable-auto-update");
+    } else {
+      args.push("--disable-auto-update=false");
     }
     if (installOptions.ignoreUnsafeCert) {
       args.push("--ignore-unsafe-cert");
@@ -1476,15 +1382,6 @@ function GenerateCommandButton({ node, settings }: { node: NodeDetail, settings:
       args.push("--gpu");
     }
     const ghproxy = installOptions.ghproxy.trim();
-    if (enableGhproxy && ghproxy) {
-      const finalUrl = (
-        ghproxy.startsWith("http")
-          ? ghproxy
-          : `http://${ghproxy}`
-      ).replace(/\/+$/, "");
-      args.push(`--install-ghproxy`);
-      args.push(finalUrl);
-    }
     const installDir = installOptions.dir.trim();
     if (enableCustomDir && installDir) {
       args.push(`--install-dir`);
@@ -1520,70 +1417,9 @@ function GenerateCommandButton({ node, settings }: { node: NodeDetail, settings:
       args.push(`--month-rotate`);
       args.push(rotateVal);
     }
-    let scriptFile = "install.sh";
-    if (selectedPlatform === "windows") {
-      scriptFile = "install.ps1";
-    }
-    let scriptUrl =
-      `https://raw.githubusercontent.com/komari-monitor/komari-agent/refs/heads/main/${scriptFile}`;
-    if (enableGhproxy) {
-      if (enableGhproxy && ghproxy) {
-        scriptUrl = scriptUrl.slice(8); // 去掉 https://
-        if (ghproxy.endsWith("/")) {
-          scriptUrl = `${ghproxy}${scriptUrl}`;
-        } else {
-          scriptUrl = `${ghproxy}/${scriptUrl}`;
-        }
-        if (!scriptUrl.startsWith("http")) {
-          scriptUrl = `http://${scriptUrl}`;
-        }
-      }
-    }
-    let finalCommand = "";
-    switch (selectedPlatform) {
-      case "linux":
-        finalCommand =
-          `wget -qO- ${quoteShellArg(scriptUrl)} | sudo bash -s -- ` +
-          quoteShellArgs(args);
-        break;
-      case "windows":
-        finalCommand =
-          `powershell.exe -NoProfile -ExecutionPolicy Bypass -Command ` +
-          `"iwr ${quotePowerShellArg(scriptUrl)}` +
-          ` -UseBasicParsing -OutFile 'install.ps1'; &` +
-          ` '.\\install.ps1'`;
-        args.forEach((arg) => {
-          finalCommand += ` ${quotePowerShellArg(arg)}`;
-        });
-        finalCommand += `"`;
-        break;
-      case "macos":
-        finalCommand =
-          `zsh <(curl -sL ${quoteShellArg(scriptUrl)}) ` + quoteShellArgs(args);
-        break;
-      case "docker": {
-        // Docker 运行时不支持安装脚本专用参数，剔除它们及其取值
-        const installOnlyFlags = [
-          "--install-ghproxy",
-          "--install-dir",
-          "--install-service-name",
-        ];
-        const dockerArgs: string[] = [];
-        for (let i = 0; i < args.length; i++) {
-          if (installOnlyFlags.includes(args[i])) {
-            i++; // 跳过该标志的取值
-            continue;
-          }
-          dockerArgs.push(args[i]);
-        }
-        finalCommand =
-          `docker run -d --name komari-agent --restart=always ` +
-          `ghcr.io/komari-monitor/komari-agent:latest ` +
-          quoteShellArgs(dockerArgs);
-        break;
-      }
-    }
-    return finalCommand;
+    return generateAgentInstallCommand(
+      selectedPlatform, args, enableGhproxy ? ghproxy : "",
+    );
   };
 
   const copyToClipboard = async (text: string) => {
@@ -1609,13 +1445,9 @@ function GenerateCommandButton({ node, settings }: { node: NodeDetail, settings:
         <div className="flex flex-col gap-4">
           <SegmentedControl.Root
             value={selectedPlatform}
-            onValueChange={(value) => setSelectedPlatform(value as Platform)}
+            onValueChange={(value) => setSelectedPlatform(value as AgentPlatform)}
           >
-            <SegmentedControl.Item value="linux">Linux</SegmentedControl.Item>
-            <SegmentedControl.Item value="windows">
-              Windows
-            </SegmentedControl.Item>
-            <SegmentedControl.Item value="macos">macOS</SegmentedControl.Item>
+            <SegmentedControl.Item value="linux">Linux · amd64 / arm64</SegmentedControl.Item>
             <SegmentedControl.Item value="docker">Docker</SegmentedControl.Item>
           </SegmentedControl.Root>
 
@@ -1648,7 +1480,8 @@ function GenerateCommandButton({ node, settings }: { node: NodeDetail, settings:
               </Flex>
               <Flex gap="2" align="center">
                 <Checkbox
-                  checked={installOptions.disableAutoUpdate}
+                  checked={selectedPlatform === "docker" || installOptions.disableAutoUpdate}
+                  disabled={selectedPlatform === "docker"}
                   onCheckedChange={(checked) => {
                     setInstallOptions((prev) => ({
                       ...prev,
@@ -1659,6 +1492,7 @@ function GenerateCommandButton({ node, settings }: { node: NodeDetail, settings:
                 <label
                   className="text-sm font-normal"
                   onClick={() => {
+                    if (selectedPlatform === "docker") return;
                     setInstallOptions((prev) => ({
                       ...prev,
                       disableAutoUpdate: !prev.disableAutoUpdate,

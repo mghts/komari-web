@@ -89,6 +89,7 @@
     "nodeTable": {
       "addNode": "Tambah Node",
       "autoDiscovery": {
+        "forkDockerOnly": "Instalasi penemuan otomatis saat ini hanya mendukung Docker Linux. Untuk systemd, tambahkan node terlebih dahulu, lalu gunakan perintah instalasi Linux node tersebut.",
         "disabledDescription": "Dengan penemuan otomatis aktif, Anda tidak perlu menambahkan node satu per satu. Cukup jalankan satu perintah di server target dan Agent akan otomatis terdaftar dan online menggunakan kunci tersebut. Ideal untuk men-deploy banyak server sekaligus.",
         "enabledDescription": "Jalankan perintah di bawah ini pada server target. Agent akan otomatis terdaftar dan online tanpa perlu membuat node secara manual.",
         "goToSettings": "Buka Pengaturan Umum untuk mengaktifkan penemuan otomatis",

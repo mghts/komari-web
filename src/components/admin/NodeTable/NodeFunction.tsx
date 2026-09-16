@@ -6,7 +6,7 @@ import { Terminal, Trash2, Copy, Download, DollarSign } from "lucide-react";
 import { t } from "i18next";
 import type { Row } from "@tanstack/react-table";
 import { EditDialog } from "./NodeEditDialog";
-import { quoteShellArgs } from "@/utils/shellQuote";
+import { generateAgentInstallCommand } from "@/utils/agentInstall";
 import {
   Button,
   Checkbox,
@@ -50,7 +50,6 @@ export function ActionsCell({ row }: { row: Row<z.infer<typeof schema>> }) {
     const host = window.location.origin;
     const token = row.original.token ?? "";
     const args: string[] = ["-e", host, "-t", token];
-    args.push("--install-version", "1.2.61-rc.1");
     // 根据安装选项生成参数
     if (installOptions.disableWebSsh) {
       args.push("--disable-web-ssh");
@@ -64,13 +63,6 @@ export function ActionsCell({ row }: { row: Row<z.infer<typeof schema>> }) {
       args.push("--ignore-unsafe-cert");
     }
     const ghproxy = installOptions.ghproxy.trim();
-    if (ghproxy) {
-      const finalGhproxy = ghproxy.startsWith("http")
-        ? ghproxy
-        : `http://${ghproxy}`;
-      args.push(`--install-ghproxy`);
-      args.push(finalGhproxy);
-    }
     const installDir = installOptions.dir.trim();
     if (installDir) {
       args.push(`--install-dir`);
@@ -82,10 +74,7 @@ export function ActionsCell({ row }: { row: Row<z.infer<typeof schema>> }) {
       args.push(serviceName);
     }
 
-    return (
-      `curl -fsSL https://github.com/mghts/komari-agent/releases/download/1.2.61-rc.1/install.sh | sudo bash -s -- ` +
-      quoteShellArgs(args)
-    );
+    return generateAgentInstallCommand("linux", args, ghproxy);
   };
 
   const copyToClipboard = async (text: string) => {
