@@ -17,6 +17,7 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci --no-audit --no-fund
+      - run: npm run check:fork
       - name: Build pinned frontend
         run: SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)" npm run build
       - uses: actions/upload-artifact@v4

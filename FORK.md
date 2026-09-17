@@ -10,3 +10,9 @@
 安装脚本和 Docker 镜像的来源、版本由 `src/utils/agentInstall.ts` 统一维护，节点页面、自动发现和旧表格组件共用。发布时同步检查这里的 Agent 版本。测试版默认禁用自动更新，Docker 始终通过更换镜像升级；更新通知仅查询 `mghts/komari` 的正式 Release。
 
 旧工作流保存在 `.github/legacy-workflows`，不会自动执行。此 fork 保留原作者信息与上游历史。
+
+## 自动发现与入口核对
+
+在后台设置自动发现密钥后，进入“服务器列表 → 添加节点”复制 Docker 命令。此命令持久化自动发现生成的凭据；systemd 安装需要先创建节点并使用节点 token。不要复制上游安装文档中的命令。
+
+导航和帮助指向 fork 文档；关于页读取 fork 开发分支的 README，保留上游许可与作者署名。运行 `npm run check:fork` 检查入口和生成的命令；可附加 Server 的 `build/agent.json` 路径，核对发行版本一致性。

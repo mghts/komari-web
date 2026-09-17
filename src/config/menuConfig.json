@@ -164,7 +164,7 @@
     },
     {
       "labelKey": "common.documentation",
-      "path": "https://komari-document.pages.dev/",
+      "path": "https://github.com/mghts/komari/blob/komari-1.4.3/FORK.md",
       "icon": "Book",
       "newTab": true,
       "bottom": true

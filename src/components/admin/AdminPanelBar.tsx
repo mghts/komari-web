@@ -1,3 +1,4 @@
+import { isNewerStableVersion } from "@/utils/releaseVersion";
 import { Cross1Icon, ExitIcon } from "@radix-ui/react-icons";
 import {
   Button,
@@ -231,26 +232,6 @@ const AdminPanelBar = ({ content }: AdminPanelBarProps) => {
     fetchVersionInfo();
   }, []);
 
-  // 规范化版本为 [major, minor, patch] 数组，忽略前缀 v 和后缀
-  function parseSemver(input?: string | null): number[] | null {
-    if (!input) return null;
-    const s = String(input).trim().replace(/^v/i, "");
-    const match = s.match(/^(\d+)\.(\d+)\.(\d+)/);
-    if (!match) return null;
-    return [Number(match[1]), Number(match[2]), Number(match[3])];
-  }
-
-  function isNewerVersion(latest?: string | null, current?: string | null) {
-    const a = parseSemver(latest);
-    const b = parseSemver(current);
-    if (!a || !b) return false;
-    for (let i = 0; i < 3; i++) {
-      if (a[i] > b[i]) return true;
-      if (a[i] < b[i]) return false;
-    }
-    return false;
-  }
-
   // 获取 GitHub releases 列表，并筛选出“比当前版本新的所有 release”
   useEffect(() => {
     let ignore = false;
@@ -274,7 +255,7 @@ const AdminPanelBar = ({ content }: AdminPanelBarProps) => {
         const valid = (data || [])
           .filter((r) => !r.draft && !r.prerelease)
           .filter((r) =>
-            isNewerVersion(r?.tag_name || r?.name, currentVersion),
+            isNewerStableVersion(r?.tag_name || r?.name, currentVersion),
           );
         setReleasesSince(valid);
         setLatestRelease(valid.length ? valid[0] : null);

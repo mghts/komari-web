@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import ReactMarkdown from "react-markdown";
+import ReactMarkdown, { defaultUrlTransform } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import "github-markdown-css/github-markdown.css";
 import Loading from "@/components/loading";
@@ -16,7 +16,7 @@ export default function AboutPage() {
   const [view, setView] = useState("open_source");
   useEffect(() => {
     fetch(
-      "https://raw.githubusercontent.com/komari-monitor/komari/refs/heads/main/README.md"
+      "https://raw.githubusercontent.com/mghts/komari/refs/heads/komari-1.4.3/README.md"
     )
       .then((res) => res.text())
       .then(setMarkdown);
@@ -185,6 +185,14 @@ export default function AboutPage() {
                   {markdown ? (
                     <ReactMarkdown
                       remarkPlugins={[remarkGfm]}
+                      urlTransform={(url, key) => {
+                        const safeUrl = defaultUrlTransform(url);
+                        if (!safeUrl) return "";
+                        const base = key === "src"
+                          ? "https://raw.githubusercontent.com/mghts/komari/komari-1.4.3/"
+                          : "https://github.com/mghts/komari/blob/komari-1.4.3/";
+                        return new URL(safeUrl, base).href;
+                      }}
                       children={markdown}
                     />
                   ) : (
@@ -192,7 +200,7 @@ export default function AboutPage() {
                   )}
                 </div>
                 <a
-                  href="https://github.com/komari-monitor/komari/blob/main/README.md"
+                  href="https://github.com/mghts/komari/blob/komari-1.4.3/README.md"
                   target="_blank"
                   rel="noreferrer"
                   className="flex flex-row gap-2 text-sm items-center"
