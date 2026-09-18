@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Text } from "@radix-ui/themes";
+import { Callout, Text } from "@radix-ui/themes";
 import { updateSettingsWithToast, useSettings } from "@/lib/api";
 import {
   SettingCardButton,
@@ -127,6 +127,16 @@ const NotificationSettings = () => {
             await updateSettingsWithToast({ notification_template: value }, t);
           }}
       />
+      {settings.notification_method &&
+        settings.notification_method !== "none" &&
+        messageList.length > 0 &&
+        !messageList.includes(settings.notification_method) && (
+          <Callout.Root color="amber" role="alert">
+            <Callout.Text>
+              {t("settings.notification.provider_unavailable")}
+            </Callout.Text>
+          </Callout.Root>
+        )}
       <SettingCardSelect
         title={t("settings.notification.method")}
         description={t("settings.notification.method_description")}

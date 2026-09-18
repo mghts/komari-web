@@ -82,28 +82,6 @@
       ]
     },
     {
-      "labelKey": "plugin.title",
-      "path": "/admin/plugins",
-      "icon": "Blocks",
-      "children": [
-        {
-          "labelKey": "plugin.manage",
-          "path": "/admin/plugins",
-          "icon": "Blocks"
-        },
-        {
-          "labelKey": "plugin.market",
-          "path": "/admin/market/plugins",
-          "icon": "Store"
-        },
-        {
-          "labelKey": "plugin.config",
-          "path": "/admin/plugins/config",
-          "icon": "Settings2"
-        }
-      ]
-    },
-    {
       "labelKey": "system.title",
       "path": "/admin/settings/site",
       "icon": "Bolt",
