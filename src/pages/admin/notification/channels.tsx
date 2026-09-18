@@ -17,7 +17,7 @@ import { Link } from "react-router-dom";
 
 const NotificationSettings = () => {
   const { t } = useTranslation();
-  const { settings, loading, error } = useSettings();
+  const { settings, setSettings, loading, error } = useSettings();
   const [messageDefs, setMessageDefs] = React.useState<any>({});
   const [messageList, setMessageList] = React.useState<string[]>([]);
   const [currentMessageSender, setCurrentMessageSender] = React.useState<string>("");
@@ -145,6 +145,7 @@ const NotificationSettings = () => {
         OnSave={async (val: string) => {
           if (val === currentMessageSender) return;
           await updateSettingsWithToast({ notification_method: val }, t);
+          setSettings((previous) => ({ ...previous, notification_method: val }));
           setCurrentMessageSender(val);
         }}
       />
