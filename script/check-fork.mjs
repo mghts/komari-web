@@ -31,6 +31,8 @@ function load(path) {
 const { generateAgentInstallCommand: command, AGENT_VERSION: version } = load(join(root, 'src/utils/agentInstall.ts'));
 const args = ['-e', 'https://monitor.example.com', '-t', "test token';$(false)", '--disable-auto-update'];
 const linux = command('linux', args);
+const autoUpdateLinux = command('linux', ['-e', 'https://monitor.example.com', '-t', 'test-only', '--disable-auto-update=false']);
+assert.ok(autoUpdateLinux.includes('--disable-auto-update=false'));
 assert.ok(linux.includes(`https://github.com/mghts/komari-agent/releases/download/${version}/install.sh`));
 assert.ok(linux.includes(`--install-version ${version}`));
 assert.ok(command('linux', args, 'https://proxy.example/').includes(`https://proxy.example/https://github.com/mghts/komari-agent/`));

@@ -202,7 +202,7 @@ const AutoDiscoverySection = ({
   const [installOptions, setInstallOptions] =
     React.useState<AutoDiscoveryInstallOptions>({
       disableWebSsh: false,
-      disableAutoUpdate: true,
+      disableAutoUpdate: false,
       ignoreUnsafeCert: false,
       memoryIncludeCache: false,
       getIpAddrFromNic: false,
@@ -1322,7 +1322,7 @@ function GenerateCommandButton({ node, settings }: { node: NodeDetail, settings:
     React.useState<AgentPlatform>("linux");
   const [installOptions, setInstallOptions] = React.useState<InstallOptions>({
     disableWebSsh: false,
-    disableAutoUpdate: true,
+    disableAutoUpdate: false,
     ignoreUnsafeCert: false,
     memoryIncludeCache: false,
     getIpAddrFromNic: false,

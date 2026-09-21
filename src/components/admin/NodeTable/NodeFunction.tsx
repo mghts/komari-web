@@ -39,7 +39,7 @@ export function ActionsCell({ row }: { row: Row<z.infer<typeof schema>> }) {
   const [removing, setRemoving] = React.useState(false);
   const [installOptions, setInstallOptions] = React.useState<InstallOptions>({
     disableWebSsh: false,
-    disableAutoUpdate: true,
+    disableAutoUpdate: false,
     ignoreUnsafeCert: false,
     ghproxy: "",
     dir: "",
