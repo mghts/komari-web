@@ -1,6 +1,6 @@
 import { quoteShellArg, quoteShellArgs } from "./shellQuote";
 
-export const AGENT_VERSION = "1.2.62";
+export const AGENT_VERSION = "1.2.63";
 export type AgentPlatform = "linux" | "docker";
 
 export function generateAgentInstallCommand(

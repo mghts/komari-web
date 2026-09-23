@@ -9,6 +9,8 @@
 
 安装脚本和 Docker 镜像的来源、版本由 `src/utils/agentInstall.ts` 统一维护，节点页面、自动发现和旧表格组件共用。发布时同步检查这里的 Agent 版本。Linux 一键安装默认不勾选“禁用自动更新”，命令显式传入 `--disable-auto-update=false`；Docker 始终通过更换镜像升级。更新通知仅查询 `mghts/komari` 的正式 Release。
 
+Agent `1.2.63` 的 Linux 一键命令可重复执行：当前命令的节点凭据、选项和服务参数覆盖旧配置，不生成备份目录。更换节点或面板地址无需先卸载；自定义安装目录和服务名须保持与目标安装一致。Docker 命令仍用于创建容器，已有同名容器的更新使用部署流程。
+
 旧工作流保存在 `.github/legacy-workflows`，不会自动执行。此 fork 保留原作者信息与上游历史。
 
 ## 自动发现与入口核对
