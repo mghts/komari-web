@@ -29,6 +29,10 @@ const LogPage = () => {
   const [page, setPage] = React.useState<number>(1);
   const [total, setTotal] = React.useState<number>(1);
   const [limit, setLimit] = React.useState<number>(10);
+  const handleLimitChange = React.useCallback((value: number) => {
+    setLimit(value);
+    setPage(1);
+  }, []);
   const [t] = useTranslation();
   const navigate = useNavigate();
   React.useEffect(() => {
@@ -51,7 +55,7 @@ const LogPage = () => {
       }
     };
     fetchLogs();
-  }, [page]);
+  }, [page, limit]);
 
   const totalPages = Math.ceil(total / limit);
   // 计算分页页码，显示当前页及前后1页，两端省略号
@@ -101,7 +105,7 @@ const LogPage = () => {
           Limit
           <NumberPicker
             defaultValue={limit}
-            onChange={setLimit}
+            onChange={handleLimitChange}
             min={1}
             max={100}
           />
